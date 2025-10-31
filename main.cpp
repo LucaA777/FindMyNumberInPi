@@ -2,10 +2,15 @@
 #include <fstream>
 #include <vector>
 #include <cstring>
+#include <tuple>
+#include <string>
+
 
 using namespace std;
 
 bool validInput(char* &str);
+tuple<int, int> findIndexInPi(char* &num, vector<int> &pi);
+
 
 int main() {
 	
@@ -38,7 +43,28 @@ int main() {
 	}
 
 	cout << "Stored " << pi.size() << " digits of pi." << endl;
+	cout << "Checking numbers..." << endl;
+ 
+	//find the smallest number not in these digits of pi
+	tuple<int, int> results = {0, 0};
+	int counter = 0;
 
+	while (get<0>(results) != -1) {
+		//convert int to char*
+		string s = to_string(counter);
+		char* num = new char[s.length() + 1];
+		strcpy(num, s.c_str());	
+
+		//find the number in pi
+		results = findIndexInPi(num, pi);		
+
+		counter++;
+
+	}
+
+	cout << "The highest consecutive number in these digits of pi is: " << counter - 2 << endl;
+
+	//begin user loop
 	while (true) {
 
 		cout << endl << endl;
@@ -56,48 +82,22 @@ int main() {
 			cin.get(num, 21);
 
 		} while(cin.fail() || !validInput(num) || strlen(num) == 0);
+		
+		//find the number in pi
+		results = findIndexInPi(num, pi);
 
 
-		bool matchFound = false;	
-
-		//go through pi and see if there are any matches
-		for (int i = 0; i < pi.size(); i++) {
-
-			
-			//check for match
-			for (int j = 0; j < strlen(num); j++) {
-				
-				/*
-				if (i + j > strlen(num) - 1) {
-					cout << "Overflow break" << endl;		
-					break;
-				}
-				*/
-				if (pi.at(i + j) != num[j] - 48) {
-					break;
-				}
-				if (j == strlen(num) - 1) {
-					//full match found!!!
-					cout << endl << "Match found from indexs " << i << " to " << (i + j) << "." << endl;
-					matchFound = true;
-					break;
-				}
-			}
-
-			//if a match has been found, break
-			if (matchFound) {
-				break;
-			}	
-
+		//check if there was a result or of nothing was found
+		if (get<0>(results) == -1) {
+			cout << endl << "No match was found in the first " << pi.size() << " digits of pi." << endl;
 
 		}
+		else {
+			cout << endl << "Match found from indexs " << get<0>(results) << " to " << get<1>(results) << "." << endl;
+		}
 
-		if (!matchFound) {
-			cout << endl << "No match was found in the first " << pi.size() << " digits of pi." << endl;
-		}	
+	}	
 
-
-	}
 	return 0;
 }
 
@@ -112,4 +112,35 @@ bool validInput(char* &str) {
 		}
 	}
 	return true;
+}
+
+tuple<int, int> findIndexInPi(char* &num, vector<int> &pi) {
+
+	//go through pi and see if there are any matches
+	for (int i = 0; i < pi.size(); i++) {
+			
+		//check for match
+		for (int j = 0; j < strlen(num); j++) {
+					
+			if (i + j > pi.size() - 1) {
+				//ensures that the search doesn't go past the end
+				break;
+			}
+
+			if (pi.at(i + j) != num[j] - 48) {
+				//pattern broken, go to the next point
+				break;
+			}
+
+			if (j == strlen(num) - 1) {
+				//full match found!!!
+				return {i, i + j};
+			}
+		}
+
+
+	}
+
+	return {-1, -1};
+
 }
